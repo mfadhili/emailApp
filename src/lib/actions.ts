@@ -216,7 +216,7 @@ export async function sendEmail({
         // Properly escape single quotes for JSON
         const escapedHtml = personalizedHtml.replace(/'/g, "\\'")
 
-        const response = await fetch(`${process.env.EMAIL_GATEWAY}/email/email/send-email-job`, {
+        const response = await fetch(`${process.env.EMAIL_GATEWAY}/email/send-email-job`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

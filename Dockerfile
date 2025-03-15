@@ -46,11 +46,15 @@ COPY --from=builder /app/public ./public
 # ✅ Force `.next` to be copied correctly
 COPY --from=builder /app/.next ./.next
 
+
+# ✅ Fix `.next` permissions again in case of issues
+RUN chmod -R 777 /app/.next
+
 # Set user
 USER nextjs
 
 # Expose port
-EXPOSE 4000
+EXPOSE 4001
 
 # Start Next.js app
 CMD ["node", "node_modules/.bin/next", "start"]
