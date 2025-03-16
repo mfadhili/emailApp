@@ -288,7 +288,7 @@ export async function sendBroadcast(templateId: string, recipients: { type: "all
             subject: template.subject,
             text: template.content,
             html: template.html,
-            from: "support@chattflow.com", // This should be configurable
+            from: "business@broadcastly.io", // This should be configurable
             contactData: {
                 name: contact.name,
                 email: contact.email,
