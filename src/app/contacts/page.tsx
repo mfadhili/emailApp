@@ -383,7 +383,7 @@ export default function ContactsPage() {
                     )}
                     <Dialog open={open} onOpenChange={handleOpenChange}>
                         <DialogTrigger asChild>
-                            <Button className="bg-whatsapp-lightgreen hover:bg-whatsapp-green">
+                            <Button className="bg-[var(--whatsapp-lightgreen)] hover:bg-[var(--whatsapp-green)]">
                                 <Plus className="h-4 w-4 mr-2" />
                                 Add Contact
                             </Button>
@@ -494,7 +494,7 @@ export default function ContactsPage() {
                                 <Button variant="outline" onClick={() => setOpen(false)}>
                                     Cancel
                                 </Button>
-                                <Button onClick={handleSubmit} className="bg-whatsapp-lightgreen hover:bg-whatsapp-green">
+                                <Button onClick={handleSubmit} className="bg-[var(--whatsapp-lightgreen)] hover:bg-[var(--whatsapp-green)]">
                                     {editingContact ? "Update Contact" : "Add Contact"}
                                 </Button>
                             </DialogFooter>
@@ -604,7 +604,7 @@ export default function ContactsPage() {
                                             <div className="flex flex-wrap gap-1">
                                                 {contact.tags && contact.tags.length > 0 ? (
                                                     contact.tags.map((tag) => (
-                                                        <Badge key={tag} variant="outline" className="bg-whatsapp-lime/10">
+                                                        <Badge key={tag} variant="outline" className="bg-[var(--whatsapp-lime)]/10">
                                                             {tag}
                                                         </Badge>
                                                     ))
@@ -748,7 +748,7 @@ export default function ContactsPage() {
                         <Button
                             onClick={handleSendEmail}
                             disabled={isSending || !selectedTemplateId}
-                            className="bg-whatsapp-lightgreen hover:bg-whatsapp-green"
+                            className="bg-[var(--whatsapp-lightgreen)] hover:bg-[var(--whatsapp-green)]"
                         >
                             {isSending ? (
                                 <>

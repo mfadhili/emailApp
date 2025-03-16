@@ -32,7 +32,7 @@ export function AppSidebar() {
             <Sidebar collapsible="icon">
                 <SidebarHeader className="pb-0">
                     <div className="flex items-center px-2 py-3">
-                        <Mail className="h-6 w-6 text-whatsapp-lightgreen mr-2" />
+                        <Mail className="h-6 w-6 text-[var(--whatsapp-lightgreen)] mr-2" />
                         <span className="text-xl font-bold">EmailFlow</span>
                     </div>
                 </SidebarHeader>
@@ -122,10 +122,10 @@ export function AppSidebar() {
                         </SidebarMenuItem>
                     </SidebarMenu>
                     <div className="p-3 mt-2">
-                        <div className="flex items-center gap-3 rounded-md bg-whatsapp-darkgreen/20 p-2">
+                        <div className="flex items-center gap-3 rounded-md bg-[var(--whatsapp-darkgreen)]/20 p-2">
                             <Avatar className="h-8 w-8">
                                 <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                                <AvatarFallback className="bg-whatsapp-lightgreen text-white">JD</AvatarFallback>
+                                <AvatarFallback className="bg-[var(--whatsapp-lightgreen)] text-white">JD</AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col">
                                 <span className="text-sm font-medium">John Doe</span>
