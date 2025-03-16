@@ -365,7 +365,7 @@ export async function sendEmailToContacts(templateId: string, contactIds: string
             subject: template.subject,
             text: template.content,
             html: template.html,
-            from: "business@chattflow.com", // This should be configurable
+            from: "business@broadcastly.io", // This should be configurable
             contactData: {
                 name: contact.name,
                 email: contact.email,
