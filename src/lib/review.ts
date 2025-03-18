@@ -1,5 +1,5 @@
 "use server"
-// src/lib/actions.ts
+
 import { getDb, ObjectId } from "@/lib/db"
 import type { Contact, EmailTemplate, Broadcast, Tag } from "@/lib/models"
 import { revalidatePath } from "next/cache"
@@ -337,7 +337,7 @@ export async function sendEmail({
         // Properly escape single quotes for JSON
         const escapedHtml = personalizedHtml.replace(/'/g, "\\'")
 
-        const response = await fetch(`${process.env.EMAIL_GATEWAY}/email/send-email-job`, {
+        const response = await fetch("http://localhost:5056/email/email/send", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -409,7 +409,7 @@ export async function sendBroadcast(templateId: string, recipients: { type: "all
             subject: template.subject,
             text: template.content,
             html: template.html,
-            from: "business@broadcastly.io", // This should be configurable
+            from: "support@chattflow.com", // This should be configurable
             contactData: {
                 name: contact.name,
                 email: contact.email,
@@ -476,7 +476,7 @@ export async function sendEmailToContacts(templateId: string, contactIds: string
             subject: template.subject,
             text: template.content,
             html: template.html,
-            from: "business@broadcastly.io", // This should be configurable
+            from: "support@chattflow.com", // This should be configurable
             contactData: {
                 name: contact.name,
                 email: contact.email,

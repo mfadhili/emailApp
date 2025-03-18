@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import type React from "react"
+
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,7 +20,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Edit, Trash2, Send, Filter, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import {
+    Plus,
+    Search,
+    Edit,
+    Trash2,
+    Send,
+    Filter,
+    ChevronLeft,
+    ChevronRight,
+    Loader2,
+    Download,
+    Upload,
+    FileSpreadsheet,
+    AlertCircle,
+} from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import {
     getContacts,
@@ -29,6 +45,8 @@ import {
     createTag,
     getTemplates,
     sendEmailToContacts,
+    importContacts,
+    exportContacts,
 } from "@/lib/actions"
 import type { Contact, Tag, EmailTemplate } from "@/lib/models"
 import { MultiSelect } from "@/components/multi-select"
@@ -51,6 +69,9 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import XLSX from "xlsx";
 
 export default function ContactsPage() {
     const { toast } = useToast()
@@ -72,6 +93,13 @@ export default function ContactsPage() {
     const [itemsPerPage, setItemsPerPage] = useState("10")
     const [currentPage, setCurrentPage] = useState(1)
     const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
+    const [importOpen, setImportOpen] = useState(false)
+    const [isImporting, setIsImporting] = useState(false)
+    const [importFile, setImportFile] = useState<File | null>(null)
+    const [importCountry, setImportCountry] = useState("")
+    const [importTags, setImportTags] = useState<string[]>([])
+    const [importErrors, setImportErrors] = useState<{ row: number; message: string }[]>([])
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     const countries = countryList().getData()
 
@@ -157,6 +185,19 @@ export default function ContactsPage() {
         setOpen(open)
         if (!open) {
             resetForm()
+        }
+    }
+
+    const handleImportOpenChange = (open: boolean) => {
+        setImportOpen(open)
+        if (!open) {
+            setImportFile(null)
+            setImportCountry("")
+            setImportTags([])
+            setImportErrors([])
+            if (fileInputRef.current) {
+                fileInputRef.current.value = ""
+            }
         }
     }
 
@@ -276,24 +317,6 @@ export default function ContactsPage() {
         }
     }
 
-    const handleTagToggle = (tagId: string) => {
-        setFormData((prev) => {
-            const currentTags = [...prev.tags]
-            const tagIndex = currentTags.indexOf(tagId)
-
-            if (tagIndex === -1) {
-                currentTags.push(tagId)
-            } else {
-                currentTags.splice(tagIndex, 1)
-            }
-
-            return {
-                ...prev,
-                tags: currentTags,
-            }
-        })
-    }
-
     const handleSelectContact = (id: string) => {
         setSelectedContactIds((prev) => {
             if (prev.includes(id)) {
@@ -361,6 +384,156 @@ export default function ContactsPage() {
         }
     }
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files.length > 0) {
+            setImportFile(e.target.files[0])
+            setImportErrors([]) // Clear previous errors
+        }
+    }
+
+    const handleImportContacts = async () => {
+        if (!importFile) {
+            toast({
+                title: "No file selected",
+                description: "Please select a file to import.",
+                variant: "destructive",
+            })
+            return
+        }
+
+        setIsImporting(true)
+        try {
+            const formData = new FormData()
+            formData.append("file", importFile)
+            formData.append("country", importCountry)
+            formData.append("tags", JSON.stringify(importTags))
+
+            // Call the server action to import contacts
+            const result = await importContacts(formData)
+
+            // Refresh contacts
+            const updatedContacts = await getContacts()
+            setContacts(updatedContacts)
+
+            // Check for errors
+            if (result.errors > 0 && result.errorDetails) {
+                setImportErrors(result.errorDetails)
+                toast({
+                    title: "Import completed with errors",
+                    description: `${result.imported} contacts imported, ${result.errors} errors found.`,
+                    variant: "destructive",
+                })
+            } else {
+                handleImportOpenChange(false)
+                toast({
+                    title: "Contacts imported",
+                    description: `${result.imported} contacts have been imported successfully.`,
+                })
+            }
+        } catch (error) {
+            console.error("Error importing contacts:", error)
+            toast({
+                title: "Error",
+                description: "Failed to import contacts",
+                variant: "destructive",
+            })
+        } finally {
+            setIsImporting(false)
+        }
+    }
+
+    const handleExportContacts = async () => {
+        try {
+            // If contacts are selected, export only those, otherwise export all
+            const contactsToExport =
+                selectedContactIds.length > 0
+                    ? contacts.filter((c) => {
+                        const id = typeof c._id === "string" ? c._id : c._id?.toString() || ""
+                        return selectedContactIds.includes(id)
+                    })
+                    : contacts
+
+            if (contactsToExport.length === 0) {
+                toast({
+                    title: "No contacts to export",
+                    description: "There are no contacts to export.",
+                    variant: "destructive",
+                })
+                return
+            }
+
+            // Call the server action to export contacts
+            const blob = await exportContacts(contactsToExport)
+
+            // Create a download link and trigger the download
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement("a")
+            a.href = url
+            a.download = `contacts_export_${new Date().toISOString().split("T")[0]}.xlsx`
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+
+            toast({
+                title: "Contacts exported",
+                description: `${contactsToExport.length} contacts have been exported successfully.`,
+            })
+        } catch (error) {
+            console.error("Error exporting contacts:", error)
+            toast({
+                title: "Error",
+                description: "Failed to export contacts",
+                variant: "destructive",
+            })
+        }
+    }
+
+    const downloadSampleTemplate = () => {
+        // Create a workbook with sample data
+        // const XLSX = require("xlsx")
+        const worksheet = XLSX.utils.json_to_sheet([
+            {
+                Name: "Acme Inc.",
+                Email: "contact@acme.com",
+                Phone: "+1 (555) 123-4567",
+                Website: "https://acme.com",
+                Country: "US",
+            },
+            {
+                Name: "Widget Co.",
+                Email: "info@widgetco.com",
+                Phone: "+1 (555) 987-6543",
+                Website: "https://widgetco.com",
+                Country: "CA",
+            },
+            {
+                Name: "Example LLC",
+                Email: "hello@example.com",
+                Phone: "+1 (555) 555-5555",
+                Website: "https://example.com",
+                Country: "UK",
+            },
+        ])
+
+        const workbook = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Contacts")
+
+        // Generate Excel file
+        const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" })
+
+        // Create a Blob and download
+        const blob = new Blob([excelBuffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = "contacts_import_template.xlsx"
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+    }
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -381,9 +554,34 @@ export default function ContactsPage() {
                             </Button>
                         </>
                     )}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline">
+                                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                                Import/Export
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Manage Contacts</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setImportOpen(true)}>
+                                <Upload className="h-4 w-4 mr-2" />
+                                Import Contacts
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleExportContacts}>
+                                <Download className="h-4 w-4 mr-2" />
+                                Export Contacts
+                                {selectedContactIds.length > 0 && ` (${selectedContactIds.length})`}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={downloadSampleTemplate}>
+                                <FileSpreadsheet className="h-4 w-4 mr-2" />
+                                Download Template
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <Dialog open={open} onOpenChange={handleOpenChange}>
                         <DialogTrigger asChild>
-                            <Button className="bg-[var(--whatsapp-lightgreen)] hover:bg-[var(--whatsapp-green)]">
+                            <Button className="bg-whatsapp-lightgreen hover:bg-whatsapp-green">
                                 <Plus className="h-4 w-4 mr-2" />
                                 Add Contact
                             </Button>
@@ -448,8 +646,7 @@ export default function ContactsPage() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             <ScrollArea className="h-80">
-                                                {
-                                                    countries.map((country) => (
+                                                {countries.map((country) => (
                                                     <SelectItem key={country.value} value={country.value}>
                                                         {country.label}
                                                     </SelectItem>
@@ -494,7 +691,7 @@ export default function ContactsPage() {
                                 <Button variant="outline" onClick={() => setOpen(false)}>
                                     Cancel
                                 </Button>
-                                <Button onClick={handleSubmit} className="bg-[var(--whatsapp-lightgreen)] hover:bg-[var(--whatsapp-green)]">
+                                <Button onClick={handleSubmit} className="bg-whatsapp-lightgreen hover:bg-whatsapp-green">
                                     {editingContact ? "Update Contact" : "Add Contact"}
                                 </Button>
                             </DialogFooter>
@@ -604,7 +801,7 @@ export default function ContactsPage() {
                                             <div className="flex flex-wrap gap-1">
                                                 {contact.tags && contact.tags.length > 0 ? (
                                                     contact.tags.map((tag) => (
-                                                        <Badge key={tag} variant="outline" className="bg-[var(--whatsapp-lime)]/10">
+                                                        <Badge key={tag} variant="outline" className="bg-whatsapp-lime/10">
                                                             {tag}
                                                         </Badge>
                                                     ))
@@ -691,6 +888,184 @@ export default function ContactsPage() {
                 </div>
             )}
 
+            {/* Import Contacts Dialog */}
+            <Dialog open={importOpen} onOpenChange={handleImportOpenChange}>
+                <DialogContent className="sm:max-w-[600px]">
+                    <DialogHeader>
+                        <DialogTitle>Import Contacts</DialogTitle>
+                        <DialogDescription>
+                            Upload a CSV or Excel file with your contacts. Download the template for the correct format.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <Tabs defaultValue="upload" className="w-full">
+                            <TabsList className="grid w-full grid-cols-2">
+                                <TabsTrigger value="upload">Upload File</TabsTrigger>
+                                <TabsTrigger value="template">Template</TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="upload" className="space-y-4">
+                                <div className="grid gap-2">
+                                    <Label htmlFor="file">Select File</Label>
+                                    <Input
+                                        id="file"
+                                        type="file"
+                                        accept=".csv,.xlsx,.xls"
+                                        onChange={handleFileChange}
+                                        ref={fileInputRef}
+                                    />
+                                    <p className="text-sm text-muted-foreground">Accepted formats: CSV, Excel (.xlsx, .xls)</p>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="importCountry">Default Country (Optional)</Label>
+                                    <Select value={importCountry} onValueChange={setImportCountry}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select a country" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <ScrollArea className="h-80">
+                                                {countries.map((country) => (
+                                                    <SelectItem key={country.value} value={country.value}>
+                                                        {country.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </ScrollArea>
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-sm text-muted-foreground">
+                                        This country will be applied to all imported contacts if not specified in the file.
+                                    </p>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label>Default Tags (Optional)</Label>
+                                    <MultiSelect
+                                        selected={importTags}
+                                        setSelected={setImportTags}
+                                        options={tags.map((tag) => ({ value: tag.name, label: tag.name }))}
+                                        placeholder="Select tags to apply to all imported contacts"
+                                        createOption={async (inputValue) => {
+                                            const newTag: Omit<Tag, "_id"> = {
+                                                name: inputValue,
+                                                type: "custom",
+                                                count: 1,
+                                            }
+
+                                            try {
+                                                await createTag(newTag)
+                                                const updatedTags = await getTags()
+                                                setTags(updatedTags)
+                                                return inputValue
+                                            } catch (error) {
+                                                console.error("Error creating tag:", error)
+                                                toast({
+                                                    title: "Error",
+                                                    description: "Failed to create tag",
+                                                    variant: "destructive",
+                                                })
+                                                return null
+                                            }
+                                        }}
+                                    />
+                                    <p className="text-sm text-muted-foreground">These tags will be applied to all imported contacts.</p>
+                                </div>
+
+                                {importErrors.length > 0 && (
+                                    <Alert variant="destructive">
+                                        <AlertCircle className="h-4 w-4" />
+                                        <AlertTitle>Import Errors</AlertTitle>
+                                        <AlertDescription>
+                                            <ScrollArea className="h-[100px] mt-2">
+                                                <ul className="list-disc pl-5 space-y-1">
+                                                    {importErrors.map((error, index) => (
+                                                        <li key={index} className="text-sm">
+                                                            Row {error.row}: {error.message}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </ScrollArea>
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
+                            </TabsContent>
+                            <TabsContent value="template" className="space-y-4">
+                                <div className="rounded-md border p-4 bg-muted/30">
+                                    <h3 className="font-medium mb-2">Sample Template Format</h3>
+                                    <p className="text-sm text-muted-foreground mb-4">
+                                        Your import file should have the following columns:
+                                    </p>
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full divide-y divide-border">
+                                            <thead>
+                                            <tr>
+                                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                                    Name
+                                                </th>
+                                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                                    Email
+                                                </th>
+                                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                                    Phone
+                                                </th>
+                                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                                    Website
+                                                </th>
+                                                <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                                                    Country
+                                                </th>
+                                            </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-border">
+                                            <tr>
+                                                <td className="px-3 py-2 text-sm">Acme Inc.</td>
+                                                <td className="px-3 py-2 text-sm">contact@acme.com</td>
+                                                <td className="px-3 py-2 text-sm">+1 (555) 123-4567</td>
+                                                <td className="px-3 py-2 text-sm">https://acme.com</td>
+                                                <td className="px-3 py-2 text-sm">US</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="px-3 py-2 text-sm">Widget Co.</td>
+                                                <td className="px-3 py-2 text-sm">info@widgetco.com</td>
+                                                <td className="px-3 py-2 text-sm">+1 (555) 987-6543</td>
+                                                <td className="px-3 py-2 text-sm">https://widgetco.com</td>
+                                                <td className="px-3 py-2 text-sm">CA</td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div className="mt-4">
+                                        <Button onClick={downloadSampleTemplate} variant="outline" className="w-full">
+                                            <Download className="h-4 w-4 mr-2" />
+                                            Download Template
+                                        </Button>
+                                    </div>
+                                </div>
+                            </TabsContent>
+                        </Tabs>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => handleImportOpenChange(false)}>
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={handleImportContacts}
+                            disabled={isImporting || !importFile}
+                            className="bg-whatsapp-lightgreen hover:bg-whatsapp-green"
+                        >
+                            {isImporting ? (
+                                <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Importing...
+                                </>
+                            ) : (
+                                <>
+                                    <Upload className="h-4 w-4 mr-2" />
+                                    Import Contacts
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
             {/* Send Email Dialog */}
             <Dialog open={sendEmailOpen} onOpenChange={setSendEmailOpen}>
                 <DialogContent className="sm:max-w-[500px]">
@@ -748,7 +1123,7 @@ export default function ContactsPage() {
                         <Button
                             onClick={handleSendEmail}
                             disabled={isSending || !selectedTemplateId}
-                            className="bg-[var(--whatsapp-lightgreen)] hover:bg-[var(--whatsapp-green)]"
+                            className="bg-whatsapp-lightgreen hover:bg-whatsapp-green"
                         >
                             {isSending ? (
                                 <>
