@@ -71,7 +71,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import XLSX from "xlsx";
+import * as XLSX from "xlsx";
 
 export default function ContactsPage() {
     const { toast } = useToast()
