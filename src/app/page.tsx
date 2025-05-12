@@ -88,7 +88,7 @@ export default function Dashboard() {
               </CardContent>
               <CardFooter>
                 <Link href="/broadcasts" className="w-full">
-                  <Button className="w-full">
+                  <Button className="w-full bg-teal hover:bg-teal-dark">
                     <Send className="mr-2 h-4 w-4" />
                     View All Broadcasts
                   </Button>

@@ -52,13 +52,28 @@ const config: Config = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
-                whatsapp: {
-                    darkgreen: "#073B3A",
-                    green: "#0B6E4F",
-                    lightgreen: "#08A045",
-                    lime: "#6BBF59",
-                    gold: "#DDB771",
+                // Custom color palette (converted from HEX to HSL)
+                teal: {
+                    DEFAULT: "hsl(173 54% 39%)",   // #2A9D8F
+                    dark: "hsl(173 60% 30%)",      // #218377
+                    light: "hsl(173 43% 46%)",     // #3CAFA1
                 },
+                navy: {
+                    DEFAULT: "hsl(197 30% 24%)",   // #264653
+                    dark: "hsl(197 39% 18%)",      // #1E3A45
+                    light: "hsl(197 35% 31%)",     // #325A6C
+                },
+                orange: {
+                    DEFAULT: "hsl(29 89% 67%)",    // #F4A261
+                    dark: "hsl(29 89% 60%)",       // #F28C3C
+                    light: "hsl(29 88% 73%)",      // #F6B483
+                },
+                coral: {
+                    DEFAULT: "hsl(12 68% 61%)",    // #E76F51
+                    dark: "hsl(12 74% 56%)",       // #E35A38
+                    light: "hsl(12 75% 67%)",      // #EB8A71
+                },
+
             },
             borderRadius: {
                 lg: "var(--radius)",
@@ -82,6 +97,6 @@ const config: Config = {
         },
     },
     plugins: [require("tailwindcss-animate")],
-};
+} satisfies Config;
 
 export default config;
