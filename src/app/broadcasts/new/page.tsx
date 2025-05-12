@@ -239,7 +239,11 @@ export default function NewBroadcastPage() {
                                     <Button variant="outline" asChild>
                                         <Link href="/broadcasts">Cancel</Link>
                                     </Button>
-                                    <Button onClick={handleSendBroadcast} disabled={isSending || !formData.templateId}>
+                                    <Button
+                                        onClick={handleSendBroadcast}
+                                        disabled={isSending || !formData.templateId}
+                                        className="bg-blue hover:bg-blue-dark"
+                                    >
                                         {isSending ? (
                                             "Sending..."
                                         ) : (
@@ -258,4 +262,3 @@ export default function NewBroadcastPage() {
         </div>
     )
 }
-

@@ -104,7 +104,7 @@ export default function ComposePage() {
                             <Button variant="outline" asChild>
                                 <Link href="/broadcasts">Preview Broadcasts</Link>
                             </Button>
-                            <Button onClick={handleSendEmail} disabled={isSending}>
+                            <Button onClick={handleSendEmail} disabled={isSending} className="bg-blue hover:bg-blue-dark">
                                 {isSending ? (
                                     "Sending..."
                                 ) : (
@@ -121,4 +121,3 @@ export default function ComposePage() {
         </div>
     )
 }
-

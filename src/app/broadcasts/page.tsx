@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Eye, Mail, Send, Search, ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { Eye, Mail, Send, Search, ChevronLeft, ChevronRight, Loader2, CalendarDays } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { Broadcast, Contact } from "@/lib/models"
 import { getBroadcasts, getBroadcastById, getContacts } from "@/lib/actions"
@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function BroadcastsPage() {
+    // Keep all the existing state and functions
     const { toast } = useToast()
     const [broadcasts, setBroadcasts] = useState<Broadcast[]>([])
     const [isLoading, setIsLoading] = useState(true)
@@ -135,66 +136,82 @@ export default function BroadcastsPage() {
         }
     }
 
+    // Keep all the existing useEffects and functions
+    // ...
+
+    // Only updating the top part of the return for brevity
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                    <h1 className="text-3xl font-bold tracking-tight">Email Broadcasts</h1>
-                    <p className="text-muted-foreground">View and manage your sent email campaigns.</p>
+            {/* Page header */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-6 mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="space-y-1">
+                        <h1 className="text-3xl font-bold tracking-tight">Email Broadcasts</h1>
+                        <p className="text-muted-foreground">View and manage your sent email campaigns.</p>
+                    </div>
+                    <Link href="/broadcasts/new">
+                        <Button className="bg-blue hover:bg-blue-dark">
+                            <Send className="h-4 w-4 mr-2" />
+                            New Broadcast
+                        </Button>
+                    </Link>
                 </div>
-                <Link href="/broadcasts/new">
-                    <Button className="bg-whatsapp-lightgreen hover:bg-whatsapp-green">
-                        <Send className="h-4 w-4 mr-2" />
-                        New Broadcast
-                    </Button>
-                </Link>
             </div>
 
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex flex-1 items-center gap-2">
-                    <div className="relative flex-1 max-w-md">
-                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            type="search"
-                            placeholder="Search broadcasts..."
-                            className="pl-8"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+            {/* Search and filters */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-4 mb-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex flex-1 items-center gap-2">
+                        <div className="relative flex-1 max-w-md">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                type="search"
+                                placeholder="Search broadcasts..."
+                                className="pl-8"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex items-center">
+                            <CalendarDays className="h-4 w-4 mr-2 text-muted-foreground" />
+                            <Select value={dateFilter} onValueChange={setDateFilter}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Filter by date" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Time</SelectItem>
+                                    <SelectItem value="today">Today</SelectItem>
+                                    <SelectItem value="yesterday">Yesterday</SelectItem>
+                                    <SelectItem value="lastWeek">Last 7 Days</SelectItem>
+                                    <SelectItem value="lastMonth">Last 30 Days</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
-                    <Select value={dateFilter} onValueChange={setDateFilter}>
-                        <SelectTrigger className="w-[180px]">
-                            <SelectValue placeholder="Filter by date" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Time</SelectItem>
-                            <SelectItem value="today">Today</SelectItem>
-                            <SelectItem value="yesterday">Yesterday</SelectItem>
-                            <SelectItem value="lastWeek">Last 7 Days</SelectItem>
-                            <SelectItem value="lastMonth">Last 30 Days</SelectItem>
-                        </SelectContent>
-                    </Select>
-                </div>
-                <div className="flex items-center gap-2">
                     <div className="flex items-center gap-2">
-                        <Label htmlFor="itemsPerPage" className="text-sm whitespace-nowrap">
-                            Show:
-                        </Label>
-                        <Select value={itemsPerPage} onValueChange={setItemsPerPage}>
-                            <SelectTrigger className="w-[80px]">
-                                <SelectValue placeholder="10" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="5">5</SelectItem>
-                                <SelectItem value="10">10</SelectItem>
-                                <SelectItem value="25">25</SelectItem>
-                                <SelectItem value="50">50</SelectItem>
-                                <SelectItem value="100">100</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-2">
+                            <Label htmlFor="itemsPerPage" className="text-sm whitespace-nowrap">
+                                Show:
+                            </Label>
+                            <Select value={itemsPerPage} onValueChange={setItemsPerPage}>
+                                <SelectTrigger className="w-[80px]">
+                                    <SelectValue placeholder="10" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="5">5</SelectItem>
+                                    <SelectItem value="10">10</SelectItem>
+                                    <SelectItem value="25">25</SelectItem>
+                                    <SelectItem value="50">50</SelectItem>
+                                    <SelectItem value="100">100</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* The rest of the component remains the same */}
+            {/* ... */}
 
             <div className="rounded-md border bg-card">
                 <Table>
@@ -338,7 +355,7 @@ export default function BroadcastsPage() {
                                             </div>
                                             <div className="w-full bg-muted h-2 rounded-full mt-2">
                                                 <div
-                                                    className="bg-whatsapp-lightgreen h-2 rounded-full"
+                                                    className="bg-blue h-2 rounded-full"
                                                     style={{
                                                         width: `${Math.round((selectedBroadcast.stats.opens / selectedBroadcast.stats.total) * 100) || 0}%`,
                                                     }}
@@ -360,7 +377,7 @@ export default function BroadcastsPage() {
                                             </div>
                                             <div className="w-full bg-muted h-2 rounded-full mt-2">
                                                 <div
-                                                    className="bg-whatsapp-gold h-2 rounded-full"
+                                                    className="bg-green-accent h-2 rounded-full"
                                                     style={{
                                                         width: `${Math.round((selectedBroadcast.stats.clicks / selectedBroadcast.stats.total) * 100) || 0}%`,
                                                     }}
@@ -399,7 +416,7 @@ export default function BroadcastsPage() {
                                                             <div className="flex flex-wrap gap-1">
                                                                 {contact.tags && contact.tags.length > 0 ? (
                                                                     contact.tags.map((tag) => (
-                                                                        <Badge key={tag} variant="outline" className="bg-whatsapp-lime/10">
+                                                                        <Badge key={tag} variant="outline" className="bg-teal/10">
                                                                             {tag}
                                                                         </Badge>
                                                                     ))
@@ -430,7 +447,7 @@ export default function BroadcastsPage() {
                                 You haven't sent any email broadcasts yet. Create your first email campaign to get started.
                             </p>
                             <Link href="/broadcasts/new">
-                                <Button className="bg-whatsapp-lightgreen hover:bg-whatsapp-green">
+                                <Button className="bg-blue hover:bg-blue-dark">
                                     <Send className="h-4 w-4 mr-2" />
                                     Create New Broadcast
                                 </Button>
@@ -442,4 +459,3 @@ export default function BroadcastsPage() {
         </div>
     )
 }
-

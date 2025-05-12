@@ -32,6 +32,7 @@ export function RichTextEditor({
                                    placeholder = "Write your content here...",
                                }: RichTextEditorProps) {
     const [editorKey, setEditorKey] = useState<number>(1)
+
     const [editorRef, setEditorRef] = useState<any>(null)
 
     // Force re-render of editor when value changes externally

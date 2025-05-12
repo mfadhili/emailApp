@@ -1,14 +1,15 @@
-import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss"
 
-const config: Config = {
-    darkMode: "class", // now just "class" or "media"
+const config = {
+    darkMode: ["class"],
     content: [
-        "./app/**/*.{ts,tsx,js,jsx}",
-        "./pages/**/*.{ts,tsx,js,jsx}",
-        "./components/**/*.{ts,tsx,js,jsx}",
-        "./src/**/*.{ts,tsx,js,jsx}",
-        "./**/*.{js,ts,jsx,tsx,mdx}",
+        "./pages/**/*.{ts,tsx}",
+        "./components/**/*.{ts,tsx}",
+        "./app/**/*.{ts,tsx}",
+        "./src/**/*.{ts,tsx}",
+        "*.{js,ts,jsx,tsx,mdx}",
     ],
+    prefix: "",
     theme: {
         container: {
             center: true,
@@ -52,28 +53,18 @@ const config: Config = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
-                // Custom color palette (converted from HEX to HSL)
-                teal: {
-                    DEFAULT: "hsl(173 54% 39%)",   // #2A9D8F
-                    dark: "hsl(173 60% 30%)",      // #218377
-                    light: "hsl(173 43% 46%)",     // #3CAFA1
+                // Custom color palette based on provided hex codes
+                blue: {
+                    DEFAULT: "#004E64",
+                    light: "#00A5CF",
+                    dark: "#003A4B",
                 },
-                navy: {
-                    DEFAULT: "hsl(197 30% 24%)",   // #264653
-                    dark: "hsl(197 39% 18%)",      // #1E3A45
-                    light: "hsl(197 35% 31%)",     // #325A6C
+                green: {
+                    DEFAULT: "#25A18E",
+                    light: "#9FFFCB",
+                    dark: "#1E8A78",
+                    accent: "#7AE582",
                 },
-                orange: {
-                    DEFAULT: "hsl(29 89% 67%)",    // #F4A261
-                    dark: "hsl(29 89% 60%)",       // #F28C3C
-                    light: "hsl(29 88% 73%)",      // #F6B483
-                },
-                coral: {
-                    DEFAULT: "hsl(12 68% 61%)",    // #E76F51
-                    dark: "hsl(12 74% 56%)",       // #E35A38
-                    light: "hsl(12 75% 67%)",      // #EB8A71
-                },
-
             },
             borderRadius: {
                 lg: "var(--radius)",
@@ -97,6 +88,6 @@ const config: Config = {
         },
     },
     plugins: [require("tailwindcss-animate")],
-} satisfies Config;
+} satisfies Config
 
-export default config;
+export default config

@@ -118,7 +118,7 @@ export function MultiSelect({
                                     disabled={isCreating}
                                 >
                                     <Plus className="mr-2 h-4 w-4" />
-                                    Create "{inputValue}"
+                                    Create &#34;{inputValue}&#34;
                                 </Button>
                             ) : (
                                 "No options found."
